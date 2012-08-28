@@ -2,6 +2,7 @@ import ConfigParser
 import logging
 from os.path import dirname
 
+
 from thrift.transport.THttpClient import THttpClient
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 from evernote.edam.userstore import UserStore
@@ -10,6 +11,8 @@ from evernote.edam.notestore.ttypes import NoteFilter
 from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 
 from notes import Notebook, Note
+
+#TODO: better error handling
 
 class EvernoteApi(object):
     def __init__(self):
@@ -48,7 +51,7 @@ class EvernoteApi(object):
         notebooks = self.note_store.listNotebooks(self._developer_token)
         return [Notebook(notebook) for notebook in notebooks]
 
-    def list_notes(self, notebook_name):
+    def get_notebook_guid(self, notebook_name):
         for notebook in self.list_notebooks():
             if notebook.name == notebook_name:
                 notebook_guid = notebook.guid
@@ -57,6 +60,8 @@ class EvernoteApi(object):
             print 'Notebook {0} not found'.format(notebook_name)
             return None
 
+    def list_notes(self, notebook_name):
+        notebook_guid = self.get_notebook_guid(notebook_name)
         note_filter = NoteFilter(notebookGuid=notebook_guid)
         note_list = self.note_store.findNotes(self._developer_token,
                                               note_filter,
@@ -64,3 +69,7 @@ class EvernoteApi(object):
                                               EDAM_USER_NOTES_MAX)
 
         return [Note(note) for note in note_list.notes]
+
+    def create_note(self, note, notebook_name):
+        edam_note = note.get_edam_note()
+        self.note_store.createNote(self._developer_token, edam_note)

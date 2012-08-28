@@ -51,7 +51,7 @@ class EvernoteCli(object):
             return
 
         for note in notes:
-            print note
+            print note.title
 
     def edit_or_add(self, note_title, notebook_name):
         creating = True
@@ -65,7 +65,7 @@ class EvernoteCli(object):
             else:
                 note = Note(note_title=note_title)
                 self.edit_file(temp_file.name) 
-                note.content = temp_file.read
+                note.content = temp_file.read()
 
             if creating:
                 self.api.create_note(note, notebook_name)
