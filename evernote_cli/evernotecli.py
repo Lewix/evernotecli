@@ -4,9 +4,10 @@
 Usage:
     note <title> [<notebook>]
     note ls [<notebook>]
-    note ls all
-    note default [<notebook>]
+    note notebooks
 """
+
+from docopt import docopt
 
 from evernoteapi import EvernoteApi
 
@@ -26,3 +27,28 @@ class EvernoteCli(object):
             notes = self.api.list_notes(notebook)
 
         return notes
+
+    def print_notebooks(self):
+        pass
+
+    def print_notes(notebook_name):
+        pass
+
+    def edit_or_add(note_title, notebook_name):
+        pass
+
+if __name__ == '__main__':
+    arguments = docopt(__doc__)
+
+    config = ConfigParser.RawConfigParser()
+    config.read(dirname(__file__) + '/evernotecli.cfg')
+    default_notebook = config.get('defaults', 'default_notebook')
+
+    cli = EvernoteCli(default_notebook)
+
+    if arguments['notebooks']:
+        cli.print_notebooks()
+    elif arguments['ls']:
+        cli.print_notes(arguments['<notebook>'])
+    elif arguments['<title>']:
+        cli.edit_or_add(arguments['<title>'], arguments['<notebook>')
