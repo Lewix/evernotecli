@@ -9,6 +9,8 @@ from evernote.edam.notestore import NoteStore
 from evernote.edam.notestore.ttypes import NoteFilter
 from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 
+from notes import Notebook, Note
+
 class EvernoteApi(object):
     def __init__(self):
         config = ConfigParser.RawConfigParser()
@@ -44,7 +46,7 @@ class EvernoteApi(object):
 
     def list_notebooks(self):
         notebooks = self.note_store.listNotebooks(self._developer_token)
-        return notebooks
+        return [Notebook(notebook) for notebook in notebooks]
 
     def list_notes(self, notebook_name):
         for notebook in self.list_notebooks():
@@ -61,4 +63,4 @@ class EvernoteApi(object):
                                               0,
                                               EDAM_USER_NOTES_MAX)
 
-        return [note.title for note in note_list.notes]
+        return [Note(note) for note in note_list.notes]
