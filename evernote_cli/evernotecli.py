@@ -13,6 +13,7 @@ from os.path import dirname
 from docopt import docopt
 
 from evernoteapi import EvernoteApi
+from notes import Note
 
 class EvernoteCli(object):
     def __init__(self, default_notebook, api=None):
@@ -51,7 +52,13 @@ class EvernoteCli(object):
             print note
 
     def edit_or_add(self, note_title, notebook_name):
-        pass
+        for remote_note in self.list_notes(notebook_name):
+            if remote_note == note_title:
+                # Update
+                break
+        else:
+            # Create
+            pass
 
     def edit_file(file_name):
         pass

@@ -38,7 +38,7 @@ def new_notes_are_created(create_note_method, update_note_method, edit_file_meth
 
 def setup_cli():
     default_notebook = 'book1'
-    
+
     api = TestApi(notes)
     cli = EvernoteCli(default_notebook, api)
     
