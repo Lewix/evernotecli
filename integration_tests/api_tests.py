@@ -11,5 +11,5 @@ def test_authentication_is_successful():
 @istest
 def test_note_store_is_retrieved_successfully():
     api = EvernoteApi()
-    note_store = api.get_note_store()
+    note_store = api._get_note_store()
     assert_is_not_none(note_store)

@@ -12,6 +12,7 @@ class EvernoteApi(object):
         config = ConfigParser.RawConfigParser()
         config.read(dirname(__file__) + '/evernotecli.cfg')
         self.developer_token = config.get('login_details', 'developer_token')
+        self.note_store = self._get_note_store()
 
 
     def _get_store_protocol(self, store_url):
@@ -29,7 +30,7 @@ class EvernoteApi(object):
 
         return note_store_url
 
-    def get_note_store(self):
+    def _get_note_store(self):
         note_store_url = self._get_note_store_url()
         note_store_protocol = self._get_store_protocol(note_store_url)
 
