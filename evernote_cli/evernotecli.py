@@ -8,6 +8,8 @@ Usage:
 """
 
 import ConfigParser
+import os
+import tempfile
 from os.path import dirname
 
 from docopt import docopt
@@ -52,16 +54,26 @@ class EvernoteCli(object):
             print note
 
     def edit_or_add(self, note_title, notebook_name):
-        for remote_note in self.list_notes(notebook_name):
-            if remote_note == note_title:
-                # Update
-                break
-        else:
-            # Create
-            pass
+        creating = True
+        with tempfile.NamedTemporaryFile() as temp_file:
+            for note_object in self.list_notes(notebook_name):
+                if note_object == note_title:
+                    creating = False
+                    note = note_object
+                    temp_file.temp_file.write(note.content)
+                    break
+            else:
+                note = Note(note_title=note_title)
+                self.edit_file(temp_file.name) 
+                note.content = temp_file.read
 
-    def edit_file(file_name):
-        pass
+            if creating:
+                self.api.create_note(note, notebook_name)
+            else:
+                self.api.update_note(note)
+
+    def edit_file(self, file_name):
+        os.system('vim {0}'.format(file_name))
 
 if __name__ == '__main__':
     arguments = docopt(__doc__)
