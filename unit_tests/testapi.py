@@ -1,8 +1,10 @@
-class TestApi(object):
-    def __init__(self, notes):
-        self.notes = notes
+from uuid import uuid4
 
-    def list_notebooks(self, notebook):
+class TestApi(object):
+    def __init__(self, all_notes):
+        self.notes = all_notes
+
+    def list_notebooks(self):
         return self.notes.keys()
 
     def list_notes(self, notebook):

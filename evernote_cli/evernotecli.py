@@ -8,9 +8,21 @@ Usage:
     note default [<notebook>]
 """
 
+from evernoteapi import EvernoteApi
+
 class EvernoteCli(object):
     def __init__(self, default_notebook, api=None):
-        pass
+        if api:
+            self.api = api
+        else:
+            self.api = EvernoteApi()
+
+        self.default_notebook = default_notebook
 
     def list_notes(self, notebook=None):
-        pass
+        if not notebook:
+            notes = self.api.list_notes(self.default_notebook)
+        else:
+            notes = self.api.list_notes(notebook)
+
+        return notes
