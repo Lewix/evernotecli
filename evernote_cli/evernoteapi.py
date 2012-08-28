@@ -6,6 +6,8 @@ from thrift.transport.THttpClient import THttpClient
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 from evernote.edam.userstore import UserStore
 from evernote.edam.notestore import NoteStore
+from evernote.edam.notestore.ttypes import NoteFilter
+from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 
 class EvernoteApi(object):
     def __init__(self):
@@ -43,3 +45,20 @@ class EvernoteApi(object):
     def list_notebooks(self):
         notebooks = self.note_store.listNotebooks(self._developer_token)
         return notebooks
+
+    def list_notes(self, notebook_name):
+        for notebook in self.list_notebooks():
+            if notebook.name == notebook_name:
+                notebook_guid = notebook.guid
+                break
+        else:
+            print 'Notebook {0} not found'.format(notebook_name)
+            return None
+
+        note_filter = NoteFilter(notebookGuid=notebook_guid)
+        note_list = self.note_store.findNotes(self._developer_token,
+                                              note_filter,
+                                              0,
+                                              EDAM_USER_NOTES_MAX)
+
+        return [note.title for note in note_list.notes]

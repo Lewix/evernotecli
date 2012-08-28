@@ -19,3 +19,9 @@ def notebooks_are_listed_successfully():
     api = EvernoteApi()
     notebooks = api.list_notebooks()
     assert_is_not_none(notebooks)
+
+@istest
+def notes_are_listed_successfully():
+    api = EvernoteApi()
+    notes = api.list_notes("lewix's notebook")
+    assert_is_not_none(notes)

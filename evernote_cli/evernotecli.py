@@ -35,11 +35,19 @@ class EvernoteCli(object):
         return self.api.list_notebooks()
 
     def print_notebooks(self):
-        for notebook in self.list_notebooks():
-            print notebook
+        notebooks = self.list_notebooks()
+        if not notebooks:
+            return
+
+        for notebook in notebooks:
+            print notebook.name
 
     def print_notes(self, notebook_name):
-        for note in self.list_notes(notebook_name):
+        notes = self.list_notes(notebook_name)
+        if not notes:
+            return
+
+        for note in notes:
             print note
 
     def edit_or_add(self, note_title, notebook_name):
