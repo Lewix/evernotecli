@@ -3,8 +3,8 @@
 
 Usage:
     note ls [<notebook>]
-    note <title> [<notebook>]
     note notebooks
+    note <title> [<notebook>]
 """
 
 import ConfigParser
@@ -36,7 +36,7 @@ class EvernoteCli(object):
             print notebook
 
     def print_notes(self, notebook_name):
-        for note in list_notes(notebook_name):
+        for note in self.list_notes(notebook_name):
             print note
 
     def edit_or_add(self, note_title, notebook_name):
@@ -54,7 +54,7 @@ if __name__ == '__main__':
     cli = EvernoteCli(default_notebook)
 
 
-    if arguments['<notebooks>']:
+    if arguments['notebooks']:
         cli.print_notebooks()
     elif arguments['ls']:
         cli.print_notes(arguments['<notebook>'])
