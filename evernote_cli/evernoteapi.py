@@ -1,5 +1,6 @@
 import ConfigParser
 import logging
+import pickle
 from os.path import dirname
 
 from thrift.transport.THttpClient import THttpClient
@@ -11,7 +12,7 @@ class EvernoteApi(object):
     def __init__(self):
         config = ConfigParser.RawConfigParser()
         config.read(dirname(__file__) + '/evernotecli.cfg')
-        self.developer_token = config.get('login_details', 'developer_token')
+        self._developer_token = config.get('login_details', 'developer_token')
         self.note_store = self._get_note_store()
 
 
@@ -25,7 +26,7 @@ class EvernoteApi(object):
         user_store = UserStore.Client(user_store_protocol,
                                       user_store_protocol)
 
-        note_store_url = user_store.getNoteStoreUrl(self.developer_token)
+        note_store_url = user_store.getNoteStoreUrl(self._developer_token)
         logging.debug('Retrieved NoteStore url: %s', note_store_url)
 
         return note_store_url
@@ -41,4 +42,7 @@ class EvernoteApi(object):
         return note_store
 
     def list_notebooks(self):
-        pass
+        notebooks = self.note_store.listNotebooks(self._developer_token)
+        with open('test_notebook', 'r+') as f:
+            pickle.dump(notebooks, f)
+        return notebooks
