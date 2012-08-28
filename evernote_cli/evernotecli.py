@@ -31,6 +31,9 @@ class EvernoteCli(object):
 
         return notes
 
+    def list_notebooks(self):
+        pass
+
     def print_notebooks(self):
         for notebook in self.list_notebooks():
             print notebook
