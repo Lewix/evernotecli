@@ -9,3 +9,9 @@ class TestApi(object):
 
     def list_notes(self, notebook):
         return self.notes[notebook]
+
+    def create_note(self, note, notebook_name):
+        pass
+
+    def update_note(self, note, notebook_name):
+        pass

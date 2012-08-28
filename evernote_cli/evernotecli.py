@@ -53,6 +53,9 @@ class EvernoteCli(object):
     def edit_or_add(self, note_title, notebook_name):
         pass
 
+    def edit_file(file_name):
+        pass
+
 if __name__ == '__main__':
     arguments = docopt(__doc__)
 
