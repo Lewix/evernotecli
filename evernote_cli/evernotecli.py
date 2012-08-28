@@ -32,7 +32,7 @@ class EvernoteCli(object):
         return notes
 
     def list_notebooks(self):
-        pass
+        return self.api.list_notebooks()
 
     def print_notebooks(self):
         for notebook in self.list_notebooks():
@@ -51,8 +51,6 @@ if __name__ == '__main__':
     config = ConfigParser.RawConfigParser()
     config.read(dirname(__file__) + '/evernotecli.cfg')
     default_notebook = config.get('defaults', 'default_notebook')
-
-    print arguments
 
     cli = EvernoteCli(default_notebook)
 
