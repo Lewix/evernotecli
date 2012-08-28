@@ -2,10 +2,13 @@
 """note.
 
 Usage:
-    note <title> [<notebook>]
     note ls [<notebook>]
+    note <title> [<notebook>]
     note notebooks
 """
+
+import ConfigParser
+from os.path import dirname
 
 from docopt import docopt
 
@@ -20,21 +23,23 @@ class EvernoteCli(object):
 
         self.default_notebook = default_notebook
 
-    def list_notes(self, notebook=None):
-        if not notebook:
+    def list_notes(self, notebook_name=None):
+        if not notebook_name:
             notes = self.api.list_notes(self.default_notebook)
         else:
-            notes = self.api.list_notes(notebook)
+            notes = self.api.list_notes(notebook_name)
 
         return notes
 
     def print_notebooks(self):
-        pass
+        for notebook in self.list_notebooks():
+            print notebook
 
-    def print_notes(notebook_name):
-        pass
+    def print_notes(self, notebook_name):
+        for note in list_notes(notebook_name):
+            print note
 
-    def edit_or_add(note_title, notebook_name):
+    def edit_or_add(self, note_title, notebook_name):
         pass
 
 if __name__ == '__main__':
@@ -44,11 +49,14 @@ if __name__ == '__main__':
     config.read(dirname(__file__) + '/evernotecli.cfg')
     default_notebook = config.get('defaults', 'default_notebook')
 
+    print arguments
+
     cli = EvernoteCli(default_notebook)
 
-    if arguments['notebooks']:
+
+    if arguments['<notebooks>']:
         cli.print_notebooks()
     elif arguments['ls']:
         cli.print_notes(arguments['<notebook>'])
     elif arguments['<title>']:
-        cli.edit_or_add(arguments['<title>'], arguments['<notebook>')
+        cli.edit_or_add(arguments['<title>'], arguments['<notebook>'])

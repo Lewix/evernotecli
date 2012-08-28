@@ -1,6 +1,5 @@
 import ConfigParser
 import logging
-import pickle
 from os.path import dirname
 
 from thrift.transport.THttpClient import THttpClient
@@ -42,4 +41,5 @@ class EvernoteApi(object):
         return note_store
 
     def list_notebooks(self):
+        notebooks = self.note_store.listNotebooks(self._developer_token)
         return notebooks
