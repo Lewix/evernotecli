@@ -39,3 +39,6 @@ class EvernoteApi(object):
         logging.debug('Retrived NoteStore: %s', note_store)
 
         return note_store
+
+    def list_notebooks(self):
+        pass
