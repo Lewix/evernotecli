@@ -42,7 +42,4 @@ class EvernoteApi(object):
         return note_store
 
     def list_notebooks(self):
-        notebooks = self.note_store.listNotebooks(self._developer_token)
-        with open('test_notebook', 'r+') as f:
-            pickle.dump(notebooks, f)
         return notebooks
