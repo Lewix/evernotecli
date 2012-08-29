@@ -1,5 +1,6 @@
 [login_details]
 developer_token = yourdevtoken
+user_store_url = http://www.evernote.com/edam/user
 
 [defaults]
 default_notebook = yourdefaultnoteboo

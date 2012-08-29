@@ -17,8 +17,8 @@ from notes import Notebook, Note
 
 class EvernoteApi(object):
     def __init__(self):
-        config = Config()
-        self._developer_token = config.get('login_details', 'developer_token')
+        self.config = Config()
+        self._developer_token = self.config.get('login_details', 'developer_token')
         self.note_store = self._get_note_store()
 
 
@@ -27,7 +27,7 @@ class EvernoteApi(object):
         return TBinaryProtocol(user_store_client)
 
     def _get_note_store_url(self):
-        user_store_url = 'http://sandbox.evernote.com/edam/user'
+        user_store_url = self.config.get('login_details', 'user_store_url')
         user_store_protocol = self._get_store_protocol(user_store_url)
         user_store = UserStore.Client(user_store_protocol,
                                       user_store_protocol)
@@ -54,8 +54,7 @@ class EvernoteApi(object):
     def get_notebook_guid(self, notebook_name):
         for notebook in self.list_notebooks():
             if notebook.name == notebook_name:
-                notebook_guid = notebook.guid
-                break
+                return notebook.guid
         else:
             print 'Notebook {0} not found'.format(notebook_name)
             return None
