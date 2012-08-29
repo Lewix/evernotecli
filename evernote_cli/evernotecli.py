@@ -57,10 +57,10 @@ class EvernoteCli(object):
         creating = True
         with tempfile.NamedTemporaryFile() as temp_file:
             for note_object in self.list_notes(notebook_name):
-                if note_object == note_title:
+                if note_object.title == note_title:
                     creating = False
                     note = note_object
-                    temp_file.temp_file.write(note.content)
+                    temp_file.write(note.content)
                     break
             else:
                 note = Note(note_title=note_title)
