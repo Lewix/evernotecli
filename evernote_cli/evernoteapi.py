@@ -1,7 +1,5 @@
-import ConfigParser
 import logging
-from os.path import dirname
-
+from os.path import dirname, realpath
 
 from thrift.transport.THttpClient import THttpClient
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
@@ -10,14 +8,16 @@ from evernote.edam.notestore import NoteStore
 from evernote.edam.notestore.ttypes import NoteFilter
 from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 
+from evernoteconfig import Config
 from notes import Notebook, Note
 
 #TODO: better error handling
+#TODO: reduce number of API calls
+#TODO: cache stuff
 
 class EvernoteApi(object):
     def __init__(self):
-        config = ConfigParser.RawConfigParser()
-        config.read(dirname(__file__) + '/evernotecli.cfg')
+        config = Config()
         self._developer_token = config.get('login_details', 'developer_token')
         self.note_store = self._get_note_store()
 

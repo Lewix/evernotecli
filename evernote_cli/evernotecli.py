@@ -7,14 +7,14 @@ Usage:
     note <title> [<notebook>]
 """
 
-import ConfigParser
 import os
 import tempfile
-from os.path import dirname
+from os.path import dirname, realpath
 
 from docopt import docopt
 
 from evernoteapi import EvernoteApi
+from evernoteconfig import Config
 from notes import Note
 
 class EvernoteCli(object):
@@ -78,8 +78,7 @@ class EvernoteCli(object):
 if __name__ == '__main__':
     arguments = docopt(__doc__)
 
-    config = ConfigParser.RawConfigParser()
-    config.read(dirname(__file__) + '/evernotecli.cfg')
+    config = Config()
     default_notebook = config.get('defaults', 'default_notebook')
 
     cli = EvernoteCli(default_notebook)
