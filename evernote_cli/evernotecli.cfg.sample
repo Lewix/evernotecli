@@ -1,0 +1,5 @@
+[login_details]
+developer_token = yourdevtoken
+
+[defaults]
+default_notebook = yourdefaultnoteboo
