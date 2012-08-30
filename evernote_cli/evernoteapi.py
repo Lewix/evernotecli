@@ -59,7 +59,7 @@ class EvernoteApi(object):
                 return notebook.guid
         else:
             print 'Notebook {0} not found'.format(notebook_name)
-            return None
+            exit()
 
     def _list_subset_of_notes(self, notebook_name, start, end):
         notebook_guid = self.get_notebook_guid(notebook_name)
