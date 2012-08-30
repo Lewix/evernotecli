@@ -99,7 +99,12 @@ class EvernoteApi(object):
         new_note = self.note_store.createNote(self._developer_token, edam_note)
 
     def get_note(self, note_title, notebook_name):
-        pass
+        for note in self.list_notes(notebook_name):
+            if note.title == note_title:
+                return self.note_store.getNote(self._developer_token,
+                                               note.guid,
+                                               True, False,
+                                               False, False)
 
     def update_note(self, note_title, note_content, notebook_name):
         pass
