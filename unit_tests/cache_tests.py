@@ -20,16 +20,6 @@ def check_notebooks_are_looked_up_in_cache():
 
     assert_less_equal(api.note_store.listNotebooks.call_count, 1)
 
-@istest
-def refresh_clears_the_cache():
-    api = make_mock_api()
-
-    api.refresh_cache()
-    assert_equal(api.note_store.listNotebooks.call_count, 1)
-
-    api.list_notebooks()
-    assert_equal(api.note_store.listNotebooks.call_count, 1)
-
 def make_mock_api():
     with patch.object(EvernoteApi, '_get_note_store'):
         api = EvernoteApi()

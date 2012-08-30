@@ -9,21 +9,25 @@ from evernoteapi import EvernoteApi
 #TODO: is_not_none doesn't test much...
 #TODO: always use sandbox
 
+@istest
 def authentication_is_successful():
     api = get_api_and_refresh_cache()
     note_store_url = api._get_note_store_url()
     assert_is_not_none(note_store_url)
 
+@istest
 def note_store_is_retrieved_successfully():
     api = get_api_and_refresh_cache()
     note_store = api._get_note_store()
     assert_is_not_none(note_store)
 
+@istest
 def notebooks_are_listed_successfully():
     api = get_api_and_refresh_cache()
     notebooks = api.list_notebooks()
     assert_is_not_none(notebooks)
 
+@istest
 def notes_are_listed_successfully():
     api = get_api_and_refresh_cache()
     notes = api.list_notes("lewix's notebook")
@@ -41,6 +45,7 @@ def notes_are_created_successfully():
     note_titles = [note.title for note in notes]
     assert_in(note_title, note_titles)
 
+@istest
 def notes_are_retrieved_successfully():
     api = get_api_and_refresh_cache()
 
@@ -51,6 +56,7 @@ def notes_are_retrieved_successfully():
     assert_is_not_none(note)
     assert_in('test', note.content)
 
+@istest
 def notes_are_updated_successfully():
     api = get_api_and_refresh_cache()
 
