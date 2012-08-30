@@ -2,6 +2,8 @@ import logging
 from os.path import dirname, realpath
 
 import markdown
+from beaker.cache import CacheManager
+from beaker.util import parse_cache_config_options
 
 from thrift.transport.THttpClient import THttpClient
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
@@ -17,7 +19,15 @@ from evernoteconfig import Config
 #TODO: reduce number of API calls
 #TODO: cache stuff
 
+cache_options = {
+    'cache.type' : 'file',
+    'cache.data_dir' : '/tmp/cache/evernote',
+    'cache.lock_dir' : '/tmp/evernotelock'
+}
+cache = CacheManager(**parse_cache_config_options(cache_options))
+
 class EvernoteApi(object):
+
     def __init__(self):
         self.config = Config()
         self._developer_token = self.config.get('login_details', 'developer_token')
@@ -28,6 +38,7 @@ class EvernoteApi(object):
         user_store_client = THttpClient(store_url)
         return TBinaryProtocol(user_store_client)
 
+    @cache.cache()
     def _get_note_store_url(self):
         user_store_url = self.config.get('login_details', 'user_store_url')
         user_store_protocol = self._get_store_protocol(user_store_url)
@@ -49,6 +60,7 @@ class EvernoteApi(object):
 
         return note_store
 
+    @cache.cache()
     def list_notebooks(self):
         notebooks = self.note_store.listNotebooks(self._developer_token)
         return notebooks
@@ -72,6 +84,7 @@ class EvernoteApi(object):
                                               end)
         return (note_list.notes, note_list.totalNotes)
 
+    @cache.cache()
     def list_notes(self, notebook_name):
         all_notes = []
         increment = 50 # Getting more than 50 doesn't seem to work
