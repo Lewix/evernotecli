@@ -16,8 +16,6 @@ from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 from evernoteconfig import Config
 
 #TODO: better error handling
-#TODO: reduce number of API calls
-#TODO: cache stuff
 
 cache_options = {
     'cache.type' : 'file',
@@ -109,6 +107,7 @@ class EvernoteApi(object):
         edam_note.notebookGuid = self.get_notebook_guid(notebook_name)
         edam_note.content = self._create_note_content(note_content)
         self.note_store.createNote(self._developer_token, edam_note)
+        cache.invalidate(self.list_notes, notebook_name)
 
     def get_note(self, note_title, notebook_name):
         #TODO: Ignore case when comparing titles
@@ -123,6 +122,14 @@ class EvernoteApi(object):
         note = self.get_note(note_title, notebook_name)
         note.content = self._create_note_content(note_content)
         self.note_store.updateNote(self._developer_token, note)
+
+    def refresh_cache(self):
+        cache.invalidate(self._get_note_store_url)
+        self.note_store = self._get_note_store()
+        cache.invalidate(self.list_notebooks)
+        for notebook in self.list_notebooks():
+            cache.invalidate(self.list_notes, notebook.name)
+            self.list_notes(notebook.name)
 
     def _create_note_content(self, note_content):
         html_content = markdown.markdown(note_content)

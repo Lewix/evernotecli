@@ -4,6 +4,7 @@
 Usage:
     note ls [<notebook>]
     note notebooks
+    note refresh
     note <title> [<notebook>]
 """
 
@@ -79,6 +80,9 @@ class EvernoteCli(object):
         os.system('vim {0}'.format(file_object.name))
         return open(file_object.name, 'r')
 
+    def refresh(self):
+        self.api.refresh_cache()
+
 if __name__ == '__main__':
     arguments = docopt(__doc__)
 
@@ -88,9 +92,11 @@ if __name__ == '__main__':
     cli = EvernoteCli(default_notebook)
 
 
-    if arguments['notebooks']:
-        cli.print_notebooks()
-    elif arguments['ls']:
+    if arguments['ls']:
         cli.print_notes(arguments['<notebook>'])
+    elif arguments['notebooks']:
+        cli.print_notebooks()
+    elif arguments['refresh']:
+        cli.refresh()
     elif arguments['<title>']:
         cli.edit_or_add(arguments['<title>'], arguments['<notebook>'])
