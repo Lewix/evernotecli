@@ -44,3 +44,26 @@ def notes_are_created_successfully():
     notes = api.list_notes("notebook2")
     note_titles = [note.title for note in notes]
     assert_in(note_title, note_titles)
+
+@istest
+def notes_are_retrieved_successfully():
+    api = EvernoteApi()
+
+    note_title = 'get_note test'
+    notebook_name = "lewix's notebook"
+
+    note = api.get_note(note_title, notebook_name)
+    assert_is_not_none(note)
+    assert_in('test', note.content)
+
+@istest
+def notes_are_updated_successfully():
+    api = EvernoteApi()
+
+    note_title = 'update_note test'
+    notebook_name = "lewix's notebook"
+    content = str(random.random())
+    api.update_note(note_title, content, notebook_name)
+
+    updated_note = api.get_note(note_title, notebook_name)
+    assert_in(content, updated_note.content)
