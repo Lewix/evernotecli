@@ -15,7 +15,6 @@ from docopt import docopt
 
 from evernoteapi import EvernoteApi
 from evernoteconfig import Config
-from notes import Note
 
 class EvernoteCli(object):
     def __init__(self, default_notebook, api=None):
@@ -54,6 +53,8 @@ class EvernoteCli(object):
             print note.title
 
     def edit_or_add(self, note_title, notebook_name):
+        #TODO: updating notes
+        #TODO: put stuff in the correct notebook
         creating = True
         with tempfile.NamedTemporaryFile() as temp_file:
             for note_object in self.list_notes(notebook_name):
@@ -63,12 +64,11 @@ class EvernoteCli(object):
                     temp_file.write(note.content)
                     break
             else:
-                note = Note(note_title=note_title)
                 self.edit_file(temp_file.name) 
-                note.content = temp_file.read()
+                content = temp_file.read()
 
             if creating:
-                self.api.create_note(note, notebook_name)
+                self.api.create_note(note_title, content, notebook_name)
             else:
                 self.api.update_note(note)
 

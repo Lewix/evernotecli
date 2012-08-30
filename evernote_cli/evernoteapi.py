@@ -1,15 +1,17 @@
 import logging
 from os.path import dirname, realpath
 
+import markdown
+
 from thrift.transport.THttpClient import THttpClient
 from thrift.protocol.TBinaryProtocol import TBinaryProtocol
+from evernote.edam.type import ttypes
 from evernote.edam.userstore import UserStore
 from evernote.edam.notestore import NoteStore
 from evernote.edam.notestore.ttypes import NoteFilter
 from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 
 from evernoteconfig import Config
-from notes import Notebook, Note
 
 #TODO: better error handling
 #TODO: reduce number of API calls
@@ -49,7 +51,7 @@ class EvernoteApi(object):
 
     def list_notebooks(self):
         notebooks = self.note_store.listNotebooks(self._developer_token)
-        return [Notebook(notebook) for notebook in notebooks]
+        return [notebook for notebook in notebooks]
 
     def get_notebook_guid(self, notebook_name):
         for notebook in self.list_notebooks():
@@ -60,15 +62,24 @@ class EvernoteApi(object):
             return None
 
     def list_notes(self, notebook_name):
+        #TODO: pagination
         notebook_guid = self.get_notebook_guid(notebook_name)
-        note_filter = NoteFilter(notebookGuid=notebook_guid)
+        note_filter = NoteFilter(notebookGuid=notebook_guid,
+                                 ascending=False,
+                                 order=1)
         note_list = self.note_store.findNotes(self._developer_token,
                                               note_filter,
                                               0,
                                               EDAM_USER_NOTES_MAX)
 
-        return [Note(note) for note in note_list.notes]
+        return [note for note in note_list.notes]
 
-    def create_note(self, note, notebook_name):
-        edam_note = note.get_edam_note()
-        self.note_store.createNote(self._developer_token, edam_note)
+    def create_note(self, note_title, note_content, notebook_name):
+        edam_note = ttypes.Note()
+        edam_note.title = note_title
+        html_content = markdown.markdown(note_content)
+        edam_note.content = self._surround_with_html(html_content)
+        new_note = self.note_store.createNote(self._developer_token, edam_note)
+
+    def _surround_with_html(self, text):
+        return '<?xml version="1.0" encoding="UTF-8"?> <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd"><en-note>{0}</en-note>'.format(text)
