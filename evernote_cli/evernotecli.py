@@ -12,6 +12,7 @@ import tempfile
 from os.path import dirname, realpath
 
 from docopt import docopt
+from html2text import HTML2Text
 
 from evernoteapi import EvernoteApi
 from evernoteconfig import Config
@@ -53,25 +54,30 @@ class EvernoteCli(object):
             print note.title
 
     def edit_or_add(self, note_title, notebook_name):
-        #TODO: updating notes
+        #TODO: do something to deal with duplicate notes
         if not notebook_name:
             notebook_name = self.default_notebook
 
-        with tempfile.NamedTemporaryFile() as temp_file:
-            note = self.api.get_note(note_title, notebook_name)
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        note = self.api.get_note(note_title, notebook_name)
 
-            if note is not None:
-                temp_file.write(note.content)
-                self.edit_file(temp_file.name)
-                content = temp_file.read()
-                self.api.update_note(note_title, content, notebook_name)
-            else:
-                self.edit_file(temp_file.name) 
-                content = temp_file.read()
-                self.api.create_note(note_title, content, notebook_name)
+        if note is not None:
+            markdown_content = HTML2Text().handle(note.content)
+            temp_file.write(markdown_content)
+            temp_file = self.edit_file(temp_file)
+            content = temp_file.read()
+            self.api.update_note(note_title, content, notebook_name)
+        else:
+            temp_file = self.edit_file(temp_file) 
+            content = temp_file.read()
+            self.api.create_note(note_title, content, notebook_name)
 
-    def edit_file(self, file_name):
-        os.system('vim {0}'.format(file_name))
+        temp_file.close()
+
+    def edit_file(self, file_object):
+        file_object.close()
+        os.system('vim {0}'.format(file_object.name))
+        return open(file_object.name, 'r')
 
 if __name__ == '__main__':
     arguments = docopt(__doc__)

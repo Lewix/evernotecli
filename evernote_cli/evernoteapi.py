@@ -51,7 +51,7 @@ class EvernoteApi(object):
 
     def list_notebooks(self):
         notebooks = self.note_store.listNotebooks(self._developer_token)
-        return [notebook for notebook in notebooks]
+        return notebooks
 
     def get_notebook_guid(self, notebook_name):
         for notebook in self.list_notebooks():
@@ -95,9 +95,10 @@ class EvernoteApi(object):
         edam_note.title = note_title
         edam_note.notebookGuid = self.get_notebook_guid(notebook_name)
         edam_note.content = self._create_note_content(note_content)
-        new_note = self.note_store.createNote(self._developer_token, edam_note)
+        self.note_store.createNote(self._developer_token, edam_note)
 
     def get_note(self, note_title, notebook_name):
+        #TODO: Ignore case when comparing titles
         for note in self.list_notes(notebook_name):
             if note.title == note_title:
                 return self.note_store.getNote(self._developer_token,
