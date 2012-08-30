@@ -61,22 +61,39 @@ class EvernoteApi(object):
             print 'Notebook {0} not found'.format(notebook_name)
             return None
 
-    def list_notes(self, notebook_name):
-        #TODO: pagination
+    def _list_subset_of_notes(self, notebook_name, start, end):
         notebook_guid = self.get_notebook_guid(notebook_name)
         note_filter = NoteFilter(notebookGuid=notebook_guid,
                                  ascending=False,
                                  order=1)
         note_list = self.note_store.findNotes(self._developer_token,
                                               note_filter,
-                                              0,
-                                              EDAM_USER_NOTES_MAX)
+                                              start,
+                                              end)
+        return (note_list.notes, note_list.totalNotes)
 
-        return [note for note in note_list.notes]
+    def list_notes(self, notebook_name):
+        all_notes = []
+        increment = 50 # Getting more than 50 doesn't seem to work
+        start = 0
+
+        (notes, total_notes) = self._list_subset_of_notes(notebook_name,
+                                                          start,
+                                                          start+increment)
+        all_notes.extend(notes)
+        while total_notes > start+increment:
+            start += increment
+            (notes, total_notes) = self._list_subset_of_notes(notebook_name,
+                                                              start,
+                                                              start+increment)
+            all_notes.extend(notes)
+
+        return [note for note in all_notes]
 
     def create_note(self, note_title, note_content, notebook_name):
         edam_note = ttypes.Note()
         edam_note.title = note_title
+        edam_note.notebookGuid = self.get_notebook_guid(notebook_name)
         html_content = markdown.markdown(note_content)
         edam_note.content = self._surround_with_html(html_content)
         new_note = self.note_store.createNote(self._developer_token, edam_note)

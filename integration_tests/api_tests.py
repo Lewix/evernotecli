@@ -39,8 +39,8 @@ def notes_are_created_successfully():
 
     note_title = str(random.random())
     content = 'test note'
-    api.create_note(note_title, content, "lewix's notebook")
+    api.create_note(note_title, content, "notebook2")
     
-    notes = api.list_notes("lewix's notebook")
+    notes = api.list_notes("notebook2")
     note_titles = [note.title for note in notes]
     assert_in(note_title, note_titles)

@@ -54,7 +54,9 @@ class EvernoteCli(object):
 
     def edit_or_add(self, note_title, notebook_name):
         #TODO: updating notes
-        #TODO: put stuff in the correct notebook
+        if not notebook_name:
+            notebook_name = self.default_notebook
+
         with tempfile.NamedTemporaryFile() as temp_file:
             for note in self.list_notes(notebook_name):
                 if note.title == note_title:
