@@ -81,5 +81,8 @@ class EvernoteApi(object):
         edam_note.content = self._surround_with_html(html_content)
         new_note = self.note_store.createNote(self._developer_token, edam_note)
 
+    def update_note(self, note_title, note_content, notebook_name):
+        pass
+
     def _surround_with_html(self, text):
         return '<?xml version="1.0" encoding="UTF-8"?> <!DOCTYPE en-note SYSTEM "http://xml.evernote.com/pub/enml2.dtd"><en-note>{0}</en-note>'.format(text)

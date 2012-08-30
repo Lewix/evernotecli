@@ -55,22 +55,18 @@ class EvernoteCli(object):
     def edit_or_add(self, note_title, notebook_name):
         #TODO: updating notes
         #TODO: put stuff in the correct notebook
-        creating = True
         with tempfile.NamedTemporaryFile() as temp_file:
-            for note_object in self.list_notes(notebook_name):
-                if note_object.title == note_title:
-                    creating = False
-                    note = note_object
+            for note in self.list_notes(notebook_name):
+                if note.title == note_title:
                     temp_file.write(note.content)
-                    break
-            else:
-                self.edit_file(temp_file.name) 
-                content = temp_file.read()
+                    self.edit_file(temp_file.name)
+                    content = temp_file.read()
+                    self.api.update_note(note_title, content, notebook_name)
+                    return
 
-            if creating:
-                self.api.create_note(note_title, content, notebook_name)
-            else:
-                self.api.update_note(note)
+            self.edit_file(temp_file.name) 
+            content = temp_file.read()
+            self.api.create_note(note_title, content, notebook_name)
 
     def edit_file(self, file_name):
         os.system('vim {0}'.format(file_name))
