@@ -98,6 +98,9 @@ class EvernoteApi(object):
         edam_note.content = self._surround_with_html(html_content)
         new_note = self.note_store.createNote(self._developer_token, edam_note)
 
+    def get_note(self, note_title, notebook_name):
+        pass
+
     def update_note(self, note_title, note_content, notebook_name):
         pass
 

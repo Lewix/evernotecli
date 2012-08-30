@@ -9,9 +9,9 @@ class TestApi(object):
     def list_notebooks(self):
         return self.notes.keys()
 
-    def list_notes(self, notebook):
+    def list_notes(self, notebook_name):
         notes = []
-        for note in self.notes[notebook]:
+        for note in self.notes[notebook_name]:
             edam_note = ttypes.Note()
             edam_note.content = ''
             edam_note.title = note['title']
@@ -24,3 +24,8 @@ class TestApi(object):
 
     def update_note(self, note_title, content, notebook_name):
         pass
+
+    def get_note(self, note_title, notebook_name):
+        for note in self.list_notes(notebook_name):
+            if note.title == note_title:
+                return note

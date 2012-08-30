@@ -58,17 +58,17 @@ class EvernoteCli(object):
             notebook_name = self.default_notebook
 
         with tempfile.NamedTemporaryFile() as temp_file:
-            for note in self.list_notes(notebook_name):
-                if note.title == note_title:
-                    temp_file.write(note.content)
-                    self.edit_file(temp_file.name)
-                    content = temp_file.read()
-                    self.api.update_note(note_title, content, notebook_name)
-                    return
+            note = self.api.get_note(note_title, notebook_name)
 
-            self.edit_file(temp_file.name) 
-            content = temp_file.read()
-            self.api.create_note(note_title, content, notebook_name)
+            if note is not None:
+                temp_file.write(note.content)
+                self.edit_file(temp_file.name)
+                content = temp_file.read()
+                self.api.update_note(note_title, content, notebook_name)
+            else:
+                self.edit_file(temp_file.name) 
+                content = temp_file.read()
+                self.api.create_note(note_title, content, notebook_name)
 
     def edit_file(self, file_name):
         os.system('vim {0}'.format(file_name))
