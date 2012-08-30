@@ -1,5 +1,5 @@
 from nose.tools import istest, assert_equal
-from mock import patch
+from mock import patch, MagicMock
 
 from testapi import TestApi
 from evernotecli import EvernoteCli
@@ -31,7 +31,7 @@ def notebooks_are_listed_correctly():
     assert_equal(notebooks, ['book1', 'book2'])
 
 @istest
-@patch.object(EvernoteCli, 'edit_file', return_value=None)
+@patch.object(EvernoteCli, 'edit_file', return_value=MagicMock())
 @patch.object(TestApi, 'update_note')
 @patch.object(TestApi, 'create_note')
 def new_notes_are_created(create_note_method, update_note_method, edit_file_method):
