@@ -65,7 +65,7 @@ class EvernoteApi(object):
 
     def get_notebook_guid(self, notebook_name):
         for notebook in self.list_notebooks():
-            if notebook.name == notebook_name:
+            if notebook.name.lower() == notebook_name.lower():
                 return notebook.guid
         else:
             print 'Notebook {0} not found'.format(notebook_name)
@@ -110,9 +110,8 @@ class EvernoteApi(object):
         cache.invalidate(self.list_notes, notebook_name)
 
     def get_note(self, note_title, notebook_name):
-        #TODO: Ignore case when comparing titles
         for note in self.list_notes(notebook_name):
-            if note.title == note_title:
+            if note.title.lower() == note_title.lower():
                 return self.note_store.getNote(self._developer_token,
                                                note.guid,
                                                True, False,
@@ -121,6 +120,7 @@ class EvernoteApi(object):
     def update_note(self, note_title, note_content, notebook_name):
         note = self.get_note(note_title, notebook_name)
         note.content = self._create_note_content(note_content)
+        #TODO: Only update if content changed
         self.note_store.updateNote(self._developer_token, note)
 
     def refresh_cache(self):
