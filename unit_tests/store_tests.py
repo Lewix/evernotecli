@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_in, assert_not_in, assert_equal
 
 from changesstore import ChangesStore
-from localnotestore import LocalNoteStore
+from localnotestore import LocalNoteStore, cache
 from mock import Mock
 
 def create_excepting_note_store():
@@ -49,3 +49,23 @@ def local_store_only_updates_when_there_are_changes():
     note_store.get_if_changed(changed_function, data_function)
 
     assert_equal(data_function.call_count, 2)
+
+
+@istest
+def cache_decorator_caches_output_until_changes():
+    note_store = LocalNoteStore()
+    changed_function = Mock(return_value=1)
+    call_counter = Mock()
+
+    @cache(changed_function, note_store)
+    def data_function(arg):
+        call_counter()
+
+    data_function(1)
+    data_function(1)
+    assert_equal(call_counter.call_count, 1)
+
+    changed_function.return_value = 2
+    data_function(1)
+    data_function(1)
+    assert_equal(call_counter.call_count, 2)
