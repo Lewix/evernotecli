@@ -1,3 +1,4 @@
+#TODO: persist these operations, otherwise this is pointless
 class ChangesStore(object):
     def __init__(self):
         self.saved_operations = []
