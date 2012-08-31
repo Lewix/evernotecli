@@ -30,9 +30,9 @@ def cache(changed_function, local_note_store):
     def cache_decorator(data_function):
         @wraps(data_function)
         def wrapper(*args, **kwargs):
-            local_note_store.get_if_changed(changed_function,
-                                            data_function,
-                                            *args, **kwargs)
+            return local_note_store.get_if_changed(changed_function,
+                                                   data_function,
+                                                   *args, **kwargs)
 
         return wrapper
     return cache_decorator

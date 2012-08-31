@@ -15,51 +15,58 @@ from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 
 from evernoteconfig import Config
 from changesstore import ChangesStore
+from localnotestore import LocalNoteStore, cache
 
 #TODO: better error handling
+#TODO: fix this shit with a nested class called CachedOperations?
 
-cache_options = {
-    'cache.type' : 'file',
-    'cache.data_dir' : '/tmp/cache/evernote',
-    'cache.lock_dir' : '/tmp/evernotelock',
-    'cache.expire' : 3600
-}
-cache = CacheManager(**parse_cache_config_options(cache_options))
+local_note_store = LocalNoteStore()
+config = Config()
+
+
+def _get_store_protocol(store_url):
+    user_store_client = THttpClient(store_url)
+    return TBinaryProtocol(user_store_client)
+
+def _get_note_store_url():
+    user_store_url = config.get('login_details', 'user_store_url')
+    user_store_protocol = _get_store_protocol(user_store_url)
+    user_store = UserStore.Client(user_store_protocol,
+                                  user_store_protocol)
+
+    developer_token = config.get('login_details', 'developer_token')
+    note_store_url = user_store.getNoteStoreUrl(developer_token)
+    logging.debug('Retrieved NoteStore url: %s', note_store_url)
+
+    return note_store_url
+
+def _get_note_store():
+    note_store_url = _get_note_store_url()
+    note_store_protocol = _get_store_protocol(note_store_url)
+
+    note_store = NoteStore.Client(note_store_protocol,
+                                  note_store_protocol)
+    logging.debug('Retrived NoteStore: %s', note_store)
+
+    return note_store
+
+note_store = _get_note_store()
+
+
+def changed_function():
+    developer_token = config.get('login_details', 'developer_token')
+    sync_state = note_store.getSyncState(developer_token)
+    return sync_state.updateCount
+
 
 class EvernoteApi(object):
     def __init__(self):
-        self.config = Config()
-        self._developer_token = self.config.get('login_details', 'developer_token')
-        self.note_store = self._get_note_store()
+        self._developer_token = config.get('login_details', 'developer_token')
+        self.note_store = _get_note_store()
         self.changes_store = ChangesStore()
 
-    def _get_store_protocol(self, store_url):
-        user_store_client = THttpClient(store_url)
-        return TBinaryProtocol(user_store_client)
 
-    @cache.cache()
-    def _get_note_store_url(self):
-        user_store_url = self.config.get('login_details', 'user_store_url')
-        user_store_protocol = self._get_store_protocol(user_store_url)
-        user_store = UserStore.Client(user_store_protocol,
-                                      user_store_protocol)
-
-        note_store_url = user_store.getNoteStoreUrl(self._developer_token)
-        logging.debug('Retrieved NoteStore url: %s', note_store_url)
-
-        return note_store_url
-
-    def _get_note_store(self):
-        note_store_url = self._get_note_store_url()
-        note_store_protocol = self._get_store_protocol(note_store_url)
-
-        note_store = NoteStore.Client(note_store_protocol,
-                                      note_store_protocol)
-        logging.debug('Retrived NoteStore: %s', note_store)
-
-        return note_store
-
-    @cache.cache()
+    @cache(changed_function, local_note_store)
     def list_notebooks(self):
         notebooks = self.note_store.listNotebooks(self._developer_token)
         return notebooks
@@ -85,7 +92,7 @@ class EvernoteApi(object):
                                                       result_spec)
         return (note_list.notes, note_list.totalNotes)
 
-    @cache.cache()
+    @cache(changed_function, local_note_store)
     def list_notes(self, notebook_name):
         #TODO: no longer need to split this up in a loop
         all_notes = []
