@@ -119,9 +119,10 @@ class EvernoteApi(object):
 
     def update_note(self, note_title, note_content, notebook_name):
         note = self.get_note(note_title, notebook_name)
+        old_content = note.content
         note.content = self._create_note_content(note_content)
-        #TODO: Only update if content changed
-        self.note_store.updateNote(self._developer_token, note)
+        if old_content != note.content:
+            self.note_store.updateNote(self._developer_token, note)
 
     def refresh_cache(self):
         cache.invalidate(self._get_note_store_url)
