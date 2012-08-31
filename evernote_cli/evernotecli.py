@@ -81,6 +81,7 @@ class EvernoteCli(object):
         return open(file_object.name, 'r')
 
     def refresh(self):
+        self.api.retry_failed_operations()
         self.api.refresh_cache()
 
 if __name__ == '__main__':

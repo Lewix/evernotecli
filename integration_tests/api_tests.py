@@ -8,6 +8,7 @@ from evernoteapi import EvernoteApi
 
 #TODO: is_not_none doesn't test much...
 #TODO: always use sandbox
+#TODO: patch api to not use cache
 
 @istest
 def authentication_is_successful():

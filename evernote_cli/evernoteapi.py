@@ -10,10 +10,11 @@ from thrift.protocol.TBinaryProtocol import TBinaryProtocol
 from evernote.edam.type import ttypes
 from evernote.edam.userstore import UserStore
 from evernote.edam.notestore import NoteStore
-from evernote.edam.notestore.ttypes import NoteFilter
+from evernote.edam.notestore.ttypes import NoteFilter, NotesMetadataResultSpec
 from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 
 from evernoteconfig import Config
+from changesstore import ChangesStore
 
 #TODO: better error handling
 
@@ -26,12 +27,11 @@ cache_options = {
 cache = CacheManager(**parse_cache_config_options(cache_options))
 
 class EvernoteApi(object):
-
     def __init__(self):
         self.config = Config()
         self._developer_token = self.config.get('login_details', 'developer_token')
         self.note_store = self._get_note_store()
-
+        self.changes_store = ChangesStore()
 
     def _get_store_protocol(self, store_url):
         user_store_client = THttpClient(store_url)
@@ -77,16 +77,19 @@ class EvernoteApi(object):
         note_filter = NoteFilter(notebookGuid=notebook_guid,
                                  ascending=False,
                                  order=1)
-        note_list = self.note_store.findNotes(self._developer_token,
-                                              note_filter,
-                                              start,
-                                              end)
+        result_spec = NotesMetadataResultSpec(includeTitle=True)
+        note_list = self.note_store.findNotesMetadata(self._developer_token,
+                                                      note_filter,
+                                                      start,
+                                                      end,
+                                                      result_spec)
         return (note_list.notes, note_list.totalNotes)
 
     @cache.cache()
     def list_notes(self, notebook_name):
+        #TODO: no longer need to split this up in a loop
         all_notes = []
-        increment = 50 # Getting more than 50 doesn't seem to work
+        increment = 1000 # Getting more than 50 doesn't seem to work
         start = 0
 
         (notes, total_notes) = self._list_subset_of_notes(notebook_name,
@@ -103,12 +106,18 @@ class EvernoteApi(object):
         return [note for note in all_notes]
 
     def create_note(self, note_title, note_content, notebook_name):
-        edam_note = ttypes.Note()
-        edam_note.title = note_title
-        edam_note.notebookGuid = self.get_notebook_guid(notebook_name)
-        edam_note.content = self._create_note_content(note_content)
-        self.note_store.createNote(self._developer_token, edam_note)
-        cache.invalidate(self.list_notes, notebook_name)
+        note = ttypes.Note()
+        note.title = note_title
+        note.notebookGuid = self.get_notebook_guid(notebook_name)
+        note.content = self._create_note_content(note_content)
+
+        def create_and_invalidate_notes_cache(developer_token, note):
+            cache.invalidate(self.list_notes, notebook_name)
+            self.note_store.createNote(self._developer_token, note)
+
+        self.changes_store.try_or_save(create_and_invalidate_notes_cache,
+                                       self._developer_token,
+                                       note)
 
     def get_note(self, note_title, notebook_name):
         for note in self.list_notes(notebook_name):
@@ -123,7 +132,12 @@ class EvernoteApi(object):
         old_content = note.content
         note.content = self._create_note_content(note_content)
         if old_content != note.content:
-            self.note_store.updateNote(self._developer_token, note)
+            self.changes_store.try_or_save(self.note_store.updateNote,
+                                           self._developer_token,
+                                           note)
+
+    def retry_failed_operations(self):
+        self.changes_store.retry_failed_operations()
 
     def refresh_cache(self):
         cache.invalidate(self._get_note_store_url)

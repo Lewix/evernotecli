@@ -9,7 +9,7 @@ class ChangesStore(object):
             operation = (function, developer_token, note)
             self.saved_operations.append(operation)
 
-    def refresh(self):
+    def retry_failed_operations(self):
         for operation in self.saved_operations:
             self.saved_operations.remove(operation)
             self.try_or_save(*operation)
