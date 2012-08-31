@@ -20,7 +20,8 @@ from evernoteconfig import Config
 cache_options = {
     'cache.type' : 'file',
     'cache.data_dir' : '/tmp/cache/evernote',
-    'cache.lock_dir' : '/tmp/evernotelock'
+    'cache.lock_dir' : '/tmp/evernotelock',
+    'cache.expire' : 3600
 }
 cache = CacheManager(**parse_cache_config_options(cache_options))
 
