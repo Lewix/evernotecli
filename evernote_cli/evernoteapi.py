@@ -23,7 +23,7 @@ cache_options = {
     'cache.type' : 'file',
     'cache.data_dir' : '/tmp/cache/evernote',
     'cache.lock_dir' : '/tmp/evernotelock',
-    'cache.expire' : 3600
+    'cache.expire' : 1800
 }
 cache = CacheManager(**parse_cache_config_options(cache_options))
 
@@ -120,11 +120,8 @@ class EvernoteApi(object):
         note.notebookGuid = self.get_notebook_guid(notebook_name)
         note.content = self._create_note_content(note_content)
 
-        def create_and_invalidate_notes_cache(developer_token, note):
-            self.changed_cache.remove_value('changed')
-            self.note_store.createNote(self._developer_token, note)
-
-        create_and_invalidate_notes_cache(self._developer_token, note)
+        self.note_store.createNote(self._developer_token, note)
+        self.changed_cache.remove_value('changed')
 
     def get_note(self, note_title, notebook_name):
         for note in self.list_notes(notebook_name):

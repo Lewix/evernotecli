@@ -55,6 +55,7 @@ class EvernoteCli(object):
         if not notes:
             return
 
+        notes.reverse()
         for note in notes:
             print note.title
 

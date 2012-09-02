@@ -30,6 +30,7 @@ class LocalNoteStore(object):
         return getattr(self.note_store, attr)
 
     def _changed(self, operation_key):
+        self.changed = self.changed_function()
         if self.changed == self.operations[operation_key]['changed']:
             return False
         self.operations[operation_key]['changed'] = self.changed
@@ -73,7 +74,7 @@ class LocalNoteStore(object):
                      'data_function' : data_function,
                      'changed' : self.changed}
         self.operations[operation_key] = operation
-        self._update_operations
+        self._update_operations()
 
     def get_if_changed(self, data_function, *args, **kwargs):
         operation_key = self._get_operation_key(data_function, *args, **kwargs)
