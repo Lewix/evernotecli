@@ -24,16 +24,8 @@ class LocalNoteStore(object):
             except EOFError:
                 self.operations = {}
 
-#        note_store_file_name = operations_dir + '/note_store'
-#        with open(note_store_file_name, 'r+') as note_store_file:
-#            try:
-#                self.note_store = cPickle.load(note_store_file)
-#            except EOFError:
-#                self.note_store = note_store
-#                cPickle.dump(note_store, note_store_file)
-
-
     def __getattr__(self, attr):
+        logging.info('Calling %s', attr)
         return getattr(self.note_store, attr)
 
     def _changed(self):
@@ -67,6 +59,7 @@ class LocalNoteStore(object):
 
     def _add_operation(self, data_function, *args, **kwargs):
         operation_key = self._get_operation_key(data_function, *args, **kwargs)
+        logging.info('Calling %s', data_function.__name__)
         operation = {'data' : data_function(*args, **kwargs),
                      'data_function' : data_function}
         self.operations[operation_key] = operation
@@ -81,6 +74,7 @@ class LocalNoteStore(object):
             return self.operations[operation_key]['data']
 
         if self._changed():
+            logging.info('Calling %s', data_function.__name__)
             new_data = data_function(*args, **kwargs)
             self.operations[operation_key]['data'] = new_data
             return new_data

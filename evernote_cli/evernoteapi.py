@@ -34,8 +34,9 @@ class EvernoteApi(object):
 
         note_store = self._get_note_store()
         #TODO: tidy up this caching (make expire global)
-        self.changed_cache = cache.get_cache('changed', expire=10)
+        self.changed_cache = cache.get_cache('changed')
         def changed_function():
+            logging.info('Calling getSyncState')
             sync_state = note_store.getSyncState(self._developer_token)
             return sync_state.updateCount
 
@@ -52,15 +53,16 @@ class EvernoteApi(object):
         user_store_client = THttpClient(store_url)
         return TBinaryProtocol(user_store_client)
 
-    @cache.cache(expire=10)
+    @cache.cache()
     def _get_note_store_url(self):
         user_store_url = self.config.get('login_details', 'user_store_url')
         user_store_protocol = self._get_store_protocol(user_store_url)
         user_store = UserStore.Client(user_store_protocol,
                                       user_store_protocol)
 
+        logging.info('Calling getNoteStoreUrl')
         note_store_url = user_store.getNoteStoreUrl(self._developer_token)
-        logging.debug('Retrieved NoteStore url: %s', note_store_url)
+        logging.info('Retrieved NoteStore url: %s', note_store_url)
 
         return note_store_url
 
@@ -70,7 +72,6 @@ class EvernoteApi(object):
 
         note_store = NoteStore.Client(note_store_protocol,
                                       note_store_protocol)
-        logging.debug('Retrived NoteStore: %s', note_store)
 
         return note_store
 
@@ -125,7 +126,7 @@ class EvernoteApi(object):
         note.content = self._create_note_content(note_content)
 
         def create_and_invalidate_notes_cache(developer_token, note):
-            cache.invalidate(self.list_notes, notebook_name)
+            self.changed_cache.remove_value('changed')
             self.note_store.createNote(self._developer_token, note)
 
         self.changes_store.try_or_save(create_and_invalidate_notes_cache,

@@ -9,7 +9,11 @@ Usage:
 """
 
 import os
+import string
+import sys
 import tempfile
+import cProfile
+import logging
 from os.path import dirname, realpath
 
 from docopt import docopt
@@ -87,11 +91,12 @@ class EvernoteCli(object):
 if __name__ == '__main__':
     arguments = docopt(__doc__)
 
+    logging.basicConfig(filename='/tmp/evernotelog', level=logging.DEBUG)
+    logging.info('Running %s', string.join(sys.argv))
     config = Config()
     default_notebook = config.get('defaults', 'default_notebook')
 
     cli = EvernoteCli(default_notebook)
-
 
     if arguments['ls']:
         cli.print_notes(arguments['<notebook>'])
