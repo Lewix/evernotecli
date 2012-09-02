@@ -67,7 +67,7 @@ class EvernoteCli(object):
         note = self.api.get_note(note_title, notebook_name)
 
         if note is not None:
-            markdown_content = HTML2Text().handle(note.content)
+            markdown_content = HTML2Text().handle(unicode(note.content, 'utf_8'))
             temp_file.write(markdown_content)
             temp_file = self.edit_file(temp_file)
             content = temp_file.read()

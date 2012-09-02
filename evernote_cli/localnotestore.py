@@ -5,6 +5,8 @@ import types
 from copy import copy
 from functools import wraps
 
+from evernote.edam.notestore.ttypes import NoteFilter
+
 from evernoteconfig import Config
 
 class LocalNoteStore(object):
@@ -16,8 +18,7 @@ class LocalNoteStore(object):
         config = Config()
         operations_dir = config.get('caching', 'cache_directory')
         self.operations_file_name = operations_dir + '/local_note_store'
-        #TODO: create the file if it doesn't exist
-        with open(self.operations_file_name) as operations_file:
+        with open(self.operations_file_name, 'r+') as operations_file:
             try:
                 operations = cPickle.load(operations_file)
                 self.operations = self._unmarshal_operations(operations)
@@ -36,7 +37,10 @@ class LocalNoteStore(object):
         return True
 
     def _get_operation_key(self, data_function, *args, **kwargs):
-        return hash((data_function.__name__, args, frozenset(kwargs.items())))
+        #TODO: Find a nicer way to generate the key
+        if len(args) > 1 and isinstance(args[1], NoteFilter):
+            return hash((data_function.__name__, args[1].notebookGuid))
+        return hash(data_function.__name__)
 
     def _marshal_operations(self, operations):
         marshalled_operations = {}

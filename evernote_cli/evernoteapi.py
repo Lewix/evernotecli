@@ -33,7 +33,7 @@ class EvernoteApi(object):
         self._developer_token = self.config.get('login_details', 'developer_token')
 
         note_store = self._get_note_store()
-        #TODO: tidy up this caching (make expire global)
+        #TODO: tidy up this caching
         self.changed_cache = cache.get_cache('changed')
         def changed_function():
             logging.info('Calling getSyncState')
@@ -101,23 +101,18 @@ class EvernoteApi(object):
         return (note_list.notes, note_list.totalNotes)
 
     def list_notes(self, notebook_name):
-        #TODO: no longer need to split this up in a loop
-        all_notes = []
-        increment = 1000 # Getting more than 50 doesn't seem to work
-        start = 0
+        notebook_guid = self.get_notebook_guid(notebook_name)
+        note_filter = NoteFilter(notebookGuid=notebook_guid,
+                                 ascending=False,
+                                 order=1)
+        result_spec = NotesMetadataResultSpec(includeTitle=True)
+        note_list = self.note_store.findNotesMetadata(self._developer_token,
+                                                      note_filter,
+                                                      0,
+                                                      1000,
+                                                      result_spec)
 
-        (notes, total_notes) = self._list_subset_of_notes(notebook_name,
-                                                          start,
-                                                          start+increment)
-        all_notes.extend(notes)
-        while total_notes > start+increment:
-            start += increment
-            (notes, total_notes) = self._list_subset_of_notes(notebook_name,
-                                                              start,
-                                                              start+increment)
-            all_notes.extend(notes)
-
-        return [note for note in all_notes]
+        return note_list.notes
 
     def create_note(self, note_title, note_content, notebook_name):
         note = ttypes.Note()
@@ -129,9 +124,7 @@ class EvernoteApi(object):
             self.changed_cache.remove_value('changed')
             self.note_store.createNote(self._developer_token, note)
 
-        self.changes_store.try_or_save(create_and_invalidate_notes_cache,
-                                       self._developer_token,
-                                       note)
+        create_and_invalidate_notes_cache(self._developer_token, note)
 
     def get_note(self, note_title, notebook_name):
         for note in self.list_notes(notebook_name):
@@ -146,17 +139,15 @@ class EvernoteApi(object):
         old_content = note.content
         note.content = self._create_note_content(note_content)
         if old_content != note.content:
-            self.changes_store.try_or_save(self.note_store.updateNote,
-                                           self._developer_token,
-                                           note)
+            self.note_store.updateNote(self._developer_token, note)
 
     def retry_failed_operations(self):
         self.changes_store.retry_failed_operations()
 
     def refresh_cache(self):
         cache.invalidate(self._get_note_store_url)
-        self.note_store = self._get_note_store()
         self.changed_cache.remove_value('changed')
+        self.note_store = self._get_note_store()
         self.cached_changed_function()
 
     def _create_note_content(self, note_content):
