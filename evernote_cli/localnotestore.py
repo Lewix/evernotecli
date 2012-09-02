@@ -29,11 +29,11 @@ class LocalNoteStore(object):
         logging.info('Calling %s', attr)
         return getattr(self.note_store, attr)
 
-    def _changed(self):
-        changed_value = self.changed_function()
-        if changed_value == self.changed:
+    def _changed(self, operation_key):
+        if self.changed == self.operations[operation_key]['changed']:
             return False
-        self.changed = changed_value
+        self.operations[operation_key]['changed'] = self.changed
+        self._update_operations()
         return True
 
     def _get_operation_key(self, data_function, *args, **kwargs):
@@ -61,15 +61,19 @@ class LocalNoteStore(object):
 
         return operations
 
+    def _update_operations(self):
+        with open(self.operations_file_name, 'w') as operations_file:
+            operations = self._marshal_operations(self.operations)
+            cPickle.dump(operations, operations_file)
+
     def _add_operation(self, data_function, *args, **kwargs):
         operation_key = self._get_operation_key(data_function, *args, **kwargs)
         logging.info('Calling %s', data_function.__name__)
         operation = {'data' : data_function(*args, **kwargs),
-                     'data_function' : data_function}
+                     'data_function' : data_function,
+                     'changed' : self.changed}
         self.operations[operation_key] = operation
-        with open(self.operations_file_name, 'w') as operations_file:
-            operations = self._marshal_operations(self.operations)
-            cPickle.dump(operations, operations_file)
+        self._update_operations
 
     def get_if_changed(self, data_function, *args, **kwargs):
         operation_key = self._get_operation_key(data_function, *args, **kwargs)
@@ -77,7 +81,7 @@ class LocalNoteStore(object):
             self._add_operation(data_function, *args, **kwargs)
             return self.operations[operation_key]['data']
 
-        if self._changed():
+        if self._changed(operation_key):
             logging.info('Calling %s', data_function.__name__)
             new_data = data_function(*args, **kwargs)
             self.operations[operation_key]['data'] = new_data
