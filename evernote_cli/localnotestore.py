@@ -1,38 +1,55 @@
 from functools import wraps
 
-#TODO: store different operations for same function with different args
+#TODO: Persist stuff
+
 class LocalNoteStore(object):
-    def __init__(self):
+    def __init__(self, note_store, changed_function):
         self.operations = {}
+        self.note_store = note_store
+        self.changed_function = changed_function
+        self.changed = changed_function()
 
-    def _add_operation(self, changed_function, data_function, *args, **kwargs):
-        operation = {'changed' : changed_function(),
-                     'changed_function' : changed_function,
-                     'data' : data_function(*args, **kwargs),
+    def __getattr__(self, attr):
+        return getattr(self.note_store, attr)
+
+    def _changed(self):
+        changed_value = self.changed_function()
+        if changed_value == self.changed:
+            return False
+        self.changed = changed_value
+        return True
+
+    def _get_operation_key(self, data_function, *args, **kwargs):
+        return hash((data_function, args, frozenset(kwargs.items())))
+
+    def _add_operation(self, data_function, *args, **kwargs):
+        operation_key = self._get_operation_key(data_function, *args, **kwargs)
+        operation = {'data' : data_function(*args, **kwargs),
                      'data_function' : data_function}
-        self.operations[data_function] = operation
+        self.operations[operation_key] = operation
 
-    def get_if_changed(self, changed_function, data_function, *args, **kwargs):
-        if data_function not in self.operations:
-            self._add_operation(changed_function,
-                                data_function, *args, **kwargs)
-            return self.operations[data_function]['data']
+    def get_if_changed(self, data_function, *args, **kwargs):
+        operation_key = self._get_operation_key(data_function, *args, **kwargs)
+        if operation_key not in self.operations:
+            self._add_operation(data_function, *args, **kwargs)
+            return self.operations[operation_key]['data']
 
-        changed = self.operations[data_function]['changed']
-        new_changed = self.operations[data_function]['changed_function']()
-        if changed != new_changed:
-            self.operations[data_function]['changed'] = new_changed
-            return data_function(*args, **kwargs)
+        if self._changed():
+            new_data = data_function(*args, **kwargs)
+            self.operations[operation_key]['data'] = new_data
+            return new_data
 
-        return self.operations[data_function]['data']
+        return self.operations[operation_key]['data']
 
-def cache(changed_function, local_note_store):
-    def cache_decorator(data_function):
-        @wraps(data_function)
-        def wrapper(*args, **kwargs):
-            local_note_store.get_if_changed(changed_function,
-                                            data_function,
-                                            *args, **kwargs)
+    def listNotebooks(self, *args, **kwargs):
+        #TODO: not actually getting called. Need to put the adapter on Client
+        data_function = self.note_store.listNotebooks
+        return self.get_if_changed(data_function, *args, **kwargs)
 
-        return wrapper
-    return cache_decorator
+    def findNotesMetadata(self, *args, **kwargs):
+        data_function = self.note_store.listNotebooks
+        return self.get_if_changed(data_function, *args, **kwargs)
+    
+    def getNote(self, *args, **kwargs):
+        data_function = self.note_store.getNote
+        return self.get_if_changed(data_function, *args, **kwargs)

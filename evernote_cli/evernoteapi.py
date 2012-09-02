@@ -15,6 +15,7 @@ from evernote.edam.limits.constants import EDAM_USER_NOTES_MAX
 
 from evernoteconfig import Config
 from changesstore import ChangesStore
+from localnotestore import LocalNoteStore
 
 #TODO: better error handling
 
@@ -30,8 +31,16 @@ class EvernoteApi(object):
     def __init__(self):
         self.config = Config()
         self._developer_token = self.config.get('login_details', 'developer_token')
-        self.note_store = self._get_note_store()
+
+        note_store = self._get_note_store()
+        def changed_function():
+            sync_state = note_store.getSyncState(self._developer_token)
+            return sync_state.updateCount
+
+        self.note_store = LocalNoteStore(note_store, changed_function)
+
         self.changes_store = ChangesStore()
+
 
     def _get_store_protocol(self, store_url):
         user_store_client = THttpClient(store_url)
@@ -59,7 +68,6 @@ class EvernoteApi(object):
 
         return note_store
 
-    @cache.cache()
     def list_notebooks(self):
         notebooks = self.note_store.listNotebooks(self._developer_token)
         return notebooks
@@ -85,7 +93,6 @@ class EvernoteApi(object):
                                                       result_spec)
         return (note_list.notes, note_list.totalNotes)
 
-    @cache.cache()
     def list_notes(self, notebook_name):
         #TODO: no longer need to split this up in a loop
         all_notes = []

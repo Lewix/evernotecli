@@ -1,7 +1,7 @@
 from nose.tools import istest, assert_in, assert_not_in, assert_equal
 
 from changesstore import ChangesStore
-from localnotestore import LocalNoteStore, cache
+from localnotestore import LocalNoteStore
 from mock import Mock
 
 def create_excepting_note_store():
@@ -35,37 +35,60 @@ def operations_are_retried_on_refresh():
 
 @istest
 def local_store_only_updates_when_there_are_changes():
-    note_store = LocalNoteStore()
     changed_function = Mock(return_value=1)
+    note_store = LocalNoteStore(Mock(), changed_function)
     data_function = Mock()
 
-    note_store.get_if_changed(changed_function, data_function)
-    note_store.get_if_changed(changed_function, data_function)
+    note_store.get_if_changed(data_function)
+    note_store.get_if_changed(data_function)
 
     assert_equal(data_function.call_count, 1)
     changed_function.return_value = 2
 
-    note_store.get_if_changed(changed_function, data_function)
-    note_store.get_if_changed(changed_function, data_function)
+    note_store.get_if_changed(data_function)
+    note_store.get_if_changed(data_function)
 
     assert_equal(data_function.call_count, 2)
 
 
 @istest
-def cache_decorator_caches_output_until_changes():
-    note_store = LocalNoteStore()
+def local_store_keeps_separate_operations_for_different_arguments():
     changed_function = Mock(return_value=1)
-    call_counter = Mock()
+    note_store = LocalNoteStore(Mock(), changed_function)
+    data_function = Mock()
 
-    @cache(changed_function, note_store)
-    def data_function(arg):
-        call_counter()
+    note_store.get_if_changed(data_function, 1)
+    note_store.get_if_changed(data_function, 2)
 
-    data_function(1)
-    data_function(1)
-    assert_equal(call_counter.call_count, 1)
+    assert_equal(data_function.call_count, 2)
 
+
+@istest
+def local_store_wraps_edam_note_store():
+    note_store = Mock()
+    changed_function = Mock(return_value=1)
+    local_note_store = LocalNoteStore(note_store, changed_function)
+
+    local_note_store.listNotebooks()
+    local_note_store.listNotebooks()
+    
+    assert_equal(note_store.listNotebooks.call_count, 1)
     changed_function.return_value = 2
-    data_function(1)
-    data_function(1)
-    assert_equal(call_counter.call_count, 2)
+
+    local_note_store.listNotebooks()
+    local_note_store.listNotebooks()
+
+    assert_equal(note_store.listNotebooks.call_count, 2)
+
+
+@istest
+def local_store_persists_data():
+    note_store = Mock()
+    note_store.listNotebooks.return_value=1
+
+    local_note_store = LocalNoteStore(note_store, Mock())
+    local_note_store.listNotebooks()
+    local_note_store = LocalNoteStore(note_store, Mock())
+    local_note_store.listNotebooks()
+
+    assert_equal(note_store.listNotebooks.call_count, 1)
