@@ -67,7 +67,6 @@ class LocalNoteStore(object):
 
     def _add_operation(self, data_function, *args, **kwargs):
         operation_key = self._get_operation_key(data_function, *args, **kwargs)
-        print 'Calling {0}'.format(data_function.__name__)
         operation = {'data' : data_function(*args, **kwargs),
                      'data_function' : data_function}
         self.operations[operation_key] = operation
@@ -82,7 +81,6 @@ class LocalNoteStore(object):
             return self.operations[operation_key]['data']
 
         if self._changed():
-            print 'Calling {0}'.format(data_function.__name__)
             new_data = data_function(*args, **kwargs)
             self.operations[operation_key]['data'] = new_data
             return new_data

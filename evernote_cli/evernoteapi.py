@@ -34,14 +34,15 @@ class EvernoteApi(object):
 
         note_store = self._get_note_store()
         #TODO: tidy up this caching (make expire global)
-        changed_cache = cache.get_cache('changed', expire=10)
+        self.changed_cache = cache.get_cache('changed', expire=10)
         def changed_function():
             sync_state = note_store.getSyncState(self._developer_token)
             return sync_state.updateCount
 
         def cached_changed_function():
-            changed_cache.get(key='changed', createfunc=changed_function)
+            self.changed_cache.get(key='changed', createfunc=changed_function)
         
+        self.cached_changed_function = cached_changed_function
         self.note_store = LocalNoteStore(note_store, cached_changed_function)
 
         self.changes_store = ChangesStore()
@@ -154,10 +155,8 @@ class EvernoteApi(object):
     def refresh_cache(self):
         cache.invalidate(self._get_note_store_url)
         self.note_store = self._get_note_store()
-        cache.invalidate(self.list_notebooks)
-        for notebook in self.list_notebooks():
-            cache.invalidate(self.list_notes, notebook.name)
-            self.list_notes(notebook.name)
+        self.changed_cache.remove_value('changed')
+        self.cached_changed_function()
 
     def _create_note_content(self, note_content):
         html_content = markdown.markdown(note_content)
