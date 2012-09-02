@@ -33,11 +33,16 @@ class EvernoteApi(object):
         self._developer_token = self.config.get('login_details', 'developer_token')
 
         note_store = self._get_note_store()
+        #TODO: tidy up this caching (make expire global)
+        changed_cache = cache.get_cache('changed', expire=10)
         def changed_function():
             sync_state = note_store.getSyncState(self._developer_token)
             return sync_state.updateCount
 
-        self.note_store = LocalNoteStore(note_store, changed_function)
+        def cached_changed_function():
+            changed_cache.get(key='changed', createfunc=changed_function)
+        
+        self.note_store = LocalNoteStore(note_store, cached_changed_function)
 
         self.changes_store = ChangesStore()
 
@@ -46,7 +51,7 @@ class EvernoteApi(object):
         user_store_client = THttpClient(store_url)
         return TBinaryProtocol(user_store_client)
 
-    @cache.cache()
+    @cache.cache(expire=10)
     def _get_note_store_url(self):
         user_store_url = self.config.get('login_details', 'user_store_url')
         user_store_protocol = self._get_store_protocol(user_store_url)
