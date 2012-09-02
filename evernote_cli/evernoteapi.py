@@ -41,7 +41,7 @@ class EvernoteApi(object):
             return sync_state.updateCount
 
         def cached_changed_function():
-            self.changed_cache.get(key='changed', createfunc=changed_function)
+            return self.changed_cache.get(key='changed', createfunc=changed_function)
         
         self.cached_changed_function = cached_changed_function
         self.note_store = LocalNoteStore(note_store, cached_changed_function)
