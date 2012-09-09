@@ -87,19 +87,6 @@ class EvernoteApi(object):
             print 'Notebook {0} not found'.format(notebook_name)
             exit()
 
-    def _list_subset_of_notes(self, notebook_name, start, end):
-        notebook_guid = self.get_notebook_guid(notebook_name)
-        note_filter = NoteFilter(notebookGuid=notebook_guid,
-                                 ascending=False,
-                                 order=1)
-        result_spec = NotesMetadataResultSpec(includeTitle=True)
-        note_list = self.note_store.findNotesMetadata(self._developer_token,
-                                                      note_filter,
-                                                      start,
-                                                      end,
-                                                      result_spec)
-        return (note_list.notes, note_list.totalNotes)
-
     def list_notes(self, notebook_name):
         notebook_guid = self.get_notebook_guid(notebook_name)
         note_filter = NoteFilter(notebookGuid=notebook_guid,
