@@ -39,8 +39,10 @@ class LocalNoteStore(object):
 
     def _get_operation_key(self, data_function, *args, **kwargs):
         #TODO: Find a nicer way to generate the key
-        if len(args) > 1 and isinstance(args[1], NoteFilter):
+        if data_function.__name__ == 'findNotesMetadata':
             return hash((data_function.__name__, args[1].notebookGuid))
+        elif data_function.__name__ == 'getNote':
+            return hash((data_function.__name__, args[1]))
         return hash(data_function.__name__)
 
     def _marshal_operations(self, operations):
