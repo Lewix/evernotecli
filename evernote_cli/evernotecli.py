@@ -5,13 +5,14 @@ Usage:
     note ls [<notebook>]
     note notebooks
     note refresh
-    note print <title> [<notebook>]
-    note <title> [<notebook>]
+    note print [<title>] [--notebook=<notebook_name>]
+    note [<title>] [--notebook=<notebook_name>]
 """
 
 import os
 import string
 import sys
+import select
 import tempfile
 import cProfile
 import logging
@@ -110,6 +111,12 @@ class EvernoteCli(object):
 if __name__ == '__main__':
     arguments = docopt(__doc__)
 
+    titles = []
+    if select.select([sys.stdin],[],[],0.0)[0]:
+        titles = [title[:-1] for title in sys.stdin.readlines()]
+    if arguments['<title>']:
+        titles.append(arguments['<title>'])
+
     logging.basicConfig(filename='/tmp/evernotelog', level=logging.DEBUG)
     logging.info('Running %s', string.join(sys.argv))
     config = Config()
@@ -124,6 +131,10 @@ if __name__ == '__main__':
     elif arguments['refresh']:
         cli.refresh()
     elif arguments['print']:
-        cli.print_note(arguments['<title>'], arguments['<notebook>'])
-    elif arguments['<title>']:
-        cli.edit_or_add(arguments['<title>'], arguments['<notebook>'])
+        for title in titles:
+            print 'Printing note {0}'.format(title)
+            cli.print_note(title, arguments['--notebook'])
+    elif len(titles) > 0:
+        for title in titles:
+            print 'Editing note {0}'.format(title)
+            cli.edit_or_add(title, arguments['--notebook'])
