@@ -124,6 +124,7 @@ class EvernoteApi(object):
         note.content = self._create_note_content(note_content)
         if old_content != note.content:
             self.note_store.updateNote(self._developer_token, note)
+            self.changed_cache.remove_value('changed')
 
     def retry_failed_operations(self):
         self.changes_store.retry_failed_operations()
