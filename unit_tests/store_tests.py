@@ -1,8 +1,8 @@
-from nose.tools import istest, assert_in, assert_not_in, assert_equal
+from nose.tools import istest, assert_in, assert_not_in, assert_equal, assert_less_equal
 
 from changesstore import ChangesStore
-from localnotestore import LocalNoteStore, cache
-from mock import Mock
+from localnotestore import LocalNoteStore
+from mock import Mock, patch
 
 def create_excepting_note_store():
     note_store = Mock()
@@ -34,38 +34,80 @@ def operations_are_retried_on_refresh():
 
 
 @istest
-def local_store_only_updates_when_there_are_changes():
-    note_store = LocalNoteStore()
+@patch('cPickle.dump')
+@patch('marshal.dumps')
+def local_store_only_updates_when_there_are_changes(pickle_dump, marshal_dump):
     changed_function = Mock(return_value=1)
+    note_store = get_note_store()
+    local_note_store = LocalNoteStore(note_store, changed_function)
     data_function = Mock()
+    data_function.__name__ = 'data_function'
 
-    note_store.get_if_changed(changed_function, data_function)
-    note_store.get_if_changed(changed_function, data_function)
+    local_note_store.get_if_changed(data_function)
+    local_note_store.get_if_changed(data_function)
 
     assert_equal(data_function.call_count, 1)
     changed_function.return_value = 2
 
-    note_store.get_if_changed(changed_function, data_function)
-    note_store.get_if_changed(changed_function, data_function)
+    local_note_store.get_if_changed(data_function)
+    local_note_store.get_if_changed(data_function)
 
     assert_equal(data_function.call_count, 2)
 
 
 @istest
-def cache_decorator_caches_output_until_changes():
-    note_store = LocalNoteStore()
+@patch('cPickle.dump')
+@patch('marshal.dumps')
+def local_store_keeps_separate_operations_for_different_arguments(pickle_dump, marshal_dump):
     changed_function = Mock(return_value=1)
-    call_counter = Mock()
+    note_store = get_note_store()
+    local_note_store = LocalNoteStore(note_store, changed_function)
+    data_function = Mock()
+    data_function.__name__ = 'data_function'
 
-    @cache(changed_function, note_store)
-    def data_function(arg):
-        call_counter()
+    local_note_store.get_if_changed(data_function, 1)
+    local_note_store.get_if_changed(data_function, 2)
 
-    data_function(1)
-    data_function(1)
-    assert_equal(call_counter.call_count, 1)
+    assert_equal(data_function.call_count, 2)
 
+
+@istest
+@patch('cPickle.dump')
+@patch('marshal.dumps')
+def local_store_wraps_edam_note_store(pickle_dump, marshal_dump):
+    note_store = get_note_store()
+    changed_function = Mock(return_value=1)
+    local_note_store = LocalNoteStore(note_store, changed_function)
+
+    local_note_store.listNotebooks()
+    local_note_store.listNotebooks()
+    
+    assert_equal(note_store.listNotebooks.call_count, 1)
     changed_function.return_value = 2
-    data_function(1)
-    data_function(1)
-    assert_equal(call_counter.call_count, 2)
+
+    local_note_store.listNotebooks()
+    local_note_store.listNotebooks()
+
+    assert_equal(note_store.listNotebooks.call_count, 2)
+
+
+@istest
+@patch('cPickle.dump')
+def local_store_persists_data(pickle_dump):
+    note_store = get_note_store()
+    note_store.listNotebooks.__name__ = 'listNotebooks'
+    def listNotebooks(*args, **kwargs):
+        return []
+    note_store.listNotebooks.func_code = listNotebooks.func_code
+
+    local_note_store = LocalNoteStore(note_store, Mock())
+    local_note_store.listNotebooks()
+    local_note_store = LocalNoteStore(note_store, Mock())
+    local_note_store.listNotebooks()
+
+    assert_equal(note_store.listNotebooks.call_count, 1)
+
+def get_note_store():
+    note_store = Mock()
+    note_store.listNotebooks.__name__ = 'listNotebooks'
+    return note_store

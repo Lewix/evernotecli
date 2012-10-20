@@ -13,7 +13,7 @@ class TestApi(object):
         notes = []
         for note in self.notes[notebook_name]:
             edam_note = ttypes.Note()
-            edam_note.content = ''
+            edam_note.content = note['content']
             edam_note.title = note['title']
             notes.append(edam_note)
 

@@ -1,6 +1,9 @@
 [login_details]
-developer_token = yourdevtoken
 user_store_url = http://www.evernote.com/edam/user
+developer_token = yourdevtoken
 
 [defaults]
-default_notebook = yourdefaultnoteboo
+default_notebook = yourdefaultnotebook
+
+[caching]
+cache_directory = /cache/directory
