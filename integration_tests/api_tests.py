@@ -1,10 +1,12 @@
 import random
 
-from nose.tools import istest, assert_is_not_none, assert_in
+from nose.tools import istest, assert_is_not_none, assert_in, assert_equal
 from mock import patch
 
 import evernotecli
 from evernoteapi import EvernoteApi
+from sandboxconfig import SandboxConfig
+from evernoteconfig import Config
 
 #TODO: is_not_none doesn't test much...
 #TODO: always use sandbox
@@ -71,5 +73,6 @@ def notes_are_updated_successfully():
 
 def get_api_and_refresh_cache():
     api = EvernoteApi()
+    assert_equal('True', api.config.get('testing', 'use_sandbox'))
     api.refresh_cache()
     return api

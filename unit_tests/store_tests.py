@@ -92,9 +92,13 @@ def local_store_wraps_edam_note_store(pickle_dump, marshal_dump):
 
 
 @istest
-def local_store_persists_data():
+@patch('cPickle.dump')
+def local_store_persists_data(pickle_dump):
     note_store = get_note_store()
     note_store.listNotebooks.__name__ = 'listNotebooks'
+    def listNotebooks(*args, **kwargs):
+        return []
+    note_store.listNotebooks.func_code = listNotebooks.func_code
 
     local_note_store = LocalNoteStore(note_store, Mock())
     local_note_store.listNotebooks()

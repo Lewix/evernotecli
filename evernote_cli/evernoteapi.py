@@ -132,8 +132,6 @@ class EvernoteApi(object):
     def refresh_cache(self):
         cache.invalidate(self._get_note_store_url)
         self.changed_cache.remove_value('changed')
-        self.note_store = self._get_note_store()
-        self.cached_changed_function()
 
     def _create_note_content(self, note_content):
         html_content = markdown.markdown(note_content)
