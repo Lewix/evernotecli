@@ -14,9 +14,7 @@ import string
 import sys
 import select
 import tempfile
-import cProfile
 import logging
-from os.path import dirname, realpath
 
 from docopt import docopt
 from html2text import HTML2Text
@@ -88,7 +86,7 @@ class EvernoteCli(object):
 
         if note is not None:
             markdown_content = self._get_note_content(note)
-            temp_file.write(markdown_content)
+            temp_file.write(markdown_content.encode('utf8'))
             temp_file = self.edit_file(temp_file)
             content = temp_file.read()
             self.api.update_note(note_title, content, notebook_name)
