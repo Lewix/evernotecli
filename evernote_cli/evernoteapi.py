@@ -18,6 +18,7 @@ from changesstore import ChangesStore
 from localnotestore import LocalNoteStore
 
 #TODO: better error handling
+#TODO: fix this shit with a nested class called CachedOperations?
 
 cache_options = {
     'cache.type' : 'file',
@@ -53,27 +54,33 @@ class EvernoteApi(object):
         user_store_client = THttpClient(store_url)
         return TBinaryProtocol(user_store_client)
 
-    @cache.cache()
-    def _get_note_store_url(self):
-        user_store_url = self.config.get('login_details', 'user_store_url')
-        user_store_protocol = self._get_store_protocol(user_store_url)
-        user_store = UserStore.Client(user_store_protocol,
-                                      user_store_protocol)
+def _get_note_store():
+    note_store_url = _get_note_store_url()
+    note_store_protocol = _get_store_protocol(note_store_url)
 
         logging.info('Calling getNoteStoreUrl')
         note_store_url = user_store.getNoteStoreUrl(self._developer_token)
         logging.info('Retrieved NoteStore url: %s', note_store_url)
 
-        return note_store_url
+    return note_store
 
-    def _get_note_store(self):
-        note_store_url = self._get_note_store_url()
-        note_store_protocol = self._get_store_protocol(note_store_url)
+note_store = _get_note_store()
 
         note_store = NoteStore.Client(note_store_protocol,
                                       note_store_protocol)
 
-        return note_store
+def changed_function():
+    developer_token = config.get('login_details', 'developer_token')
+    sync_state = note_store.getSyncState(developer_token)
+    return sync_state.updateCount
+
+
+class EvernoteApi(object):
+    def __init__(self):
+        self._developer_token = config.get('login_details', 'developer_token')
+        self.note_store = _get_note_store()
+        self.changes_store = ChangesStore()
+
 
     def list_notebooks(self):
         notebooks = self.note_store.listNotebooks(self._developer_token)
